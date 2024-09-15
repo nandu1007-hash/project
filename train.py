@@ -19,10 +19,10 @@ transform = transforms.Compose(
 )
 
 train_dataset = CustomImageDataset(
-    root="path/to/dataset", split="train", transform=transform
+    root="/kaggle/input/brain-tumor-mri-dataset", split="train", transform=transform
 )
 test_dataset = CustomImageDataset(
-    root="path/to/dataset", split="test", transform=transform
+    root="/kaggle/input/brain-tumor-mri-dataset", split="test", transform=transform
 )
 
 # Create data loaders

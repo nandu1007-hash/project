@@ -22,9 +22,9 @@ class CustomImageDataset(data.Dataset):
         self.labels = []
 
         if self.split == "train":
-            self.image_dir = join(self.root, "training")
+            self.image_dir = join(self.root, "Training")
         elif self.split == "test":
-            self.image_dir = join(self.root, "testing")
+            self.image_dir = join(self.root, "Testing")
         else:
             raise ValueError("Invalid split type! Use 'train' or 'test'.")
 
