@@ -44,7 +44,7 @@ class Conv2dReLU(nn.Sequential):
         super(Conv2dReLU, self).__init__(conv, bn, relu)
 
 
-class TransformerDecoderBlock(nn.Module):
+class DecoderBlock(nn.Module):
     def __init__(
         self,
         in_channels,
