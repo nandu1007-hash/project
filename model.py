@@ -44,11 +44,6 @@ class Conv2dReLU(nn.Sequential):
         super(Conv2dReLU, self).__init__(conv, bn, relu)
 
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-
-
 class TransformerDecoderBlock(nn.Module):
     def __init__(
         self,
