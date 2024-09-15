@@ -14,6 +14,7 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 transform = transforms.Compose(
     [
+        transforms.Grayscale(num_output_channels=3),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ]
@@ -115,7 +116,6 @@ def evaluate(model, loader, device):
     return epoch_loss, epoch_acc
 
 
-# Main training loop
 for epoch in tqdm(range(NUM_EPOCHS)):
     train_loss, train_acc = train_one_epoch(model, train_loader, optimizer, DEVICE)
     test_loss, test_acc = evaluate(model, test_loader, DEVICE)
