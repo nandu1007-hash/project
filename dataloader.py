@@ -3,8 +3,10 @@ from glob import glob
 from os.path import join
 
 import imageio
+import numpy as np
 import torch
 import torchvision.transforms as transforms
+from PIL import Image
 from torch.utils import data
 
 
@@ -44,10 +46,13 @@ class CustomImageDataset(data.Dataset):
         img_file = self.filelist[index]
         img = imageio.imread(img_file)
 
-        if img.shape[:2] != (512, 512):
-            raise ValueError(
-                f"Image size mismatch! Expected 512x512, but got {img.shape[:2]}"
-            )
+        # Convert numpy array to PIL Image
+        if isinstance(img, np.ndarray):
+            img = Image.fromarray(img)
+
+        # Ensure image size is 512x512
+        if img.size != (512, 512):
+            img = img.resize((512, 512))  # Resize image to 512x512
 
         if self.transform:
             img = self.transform(img)
