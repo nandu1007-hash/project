@@ -50,6 +50,46 @@ class DecoderBlock(nn.Module):
         in_channels,
         skip_channels,
         out_channels,
+        use_batchnorm=True,
+        attention_type=None,
+    ):
+        super().__init__()
+        self.conv1 = Conv2dReLU(
+            in_channels + skip_channels,
+            out_channels,
+            kernel_size=3,
+            padding=1,
+            use_batchnorm=use_batchnorm,
+        )
+        self.attention1 = Attention(
+            attention_type, in_channels=in_channels + skip_channels
+        )
+        self.conv2 = Conv2dReLU(
+            out_channels,
+            out_channels,
+            kernel_size=3,
+            padding=1,
+            use_batchnorm=use_batchnorm,
+        )
+        self.attention2 = Attention(attention_type, in_channels=out_channels)
+
+    def forward(self, x, skip=None):
+        x = F.interpolate(x, scale_factor=2, mode="nearest")
+        if skip is not None:
+            x = torch.cat([x, skip], dim=1)
+            x = self.attention1(x)
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.attention2(x)
+        return x
+
+
+class TransformerDecoderBlock(nn.Module):
+    def __init__(
+        self,
+        in_channels,
+        skip_channels,
+        out_channels,
         num_heads=8,
         dropout_rate=0.1,
     ):
