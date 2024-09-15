@@ -2,3 +2,4 @@ imageio
 torch
 torchvision
 glob2
+efficientnet_pytorch
