@@ -8,7 +8,6 @@ import torch
 import torchvision.transforms as transforms
 from PIL import Image
 from torch.utils import data
-import numpy
 
 class CustomImageDataset(data.Dataset):
     """
