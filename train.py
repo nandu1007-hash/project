@@ -5,6 +5,7 @@ import torchvision.transforms as transforms
 from dataloader import CustomImageDataset
 from model import Mymodel  # Import your model from the appropriate file
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 BATCH_SIZE = 32
 LEARNING_RATE = 0.001
@@ -115,7 +116,7 @@ def evaluate(model, loader, device):
 
 
 # Main training loop
-for epoch in range(NUM_EPOCHS):
+for epoch in tqdm(range(NUM_EPOCHS)):
     train_loss, train_acc = train_one_epoch(model, train_loader, optimizer, DEVICE)
     test_loss, test_acc = evaluate(model, test_loader, DEVICE)
 
