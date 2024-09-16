@@ -44,22 +44,25 @@ class Args:
 args = Args()
 
 # Initialize model, assuming the model outputs both predictions and uncertainties
-model = Mymodel(args, classes=4).to(DEVICE)  # For binary classification, classes=1
-
+model = Mymodel(args, classes=4).to(DEVICE)  # For 4-class classification
 criterion = nn.CrossEntropyLoss()
+
 # Optimizer
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
 
 # Uncertainty-based loss
 def bayesian_uncertainty_loss(logits, labels, std, device):
-    bce = criterion(logits, labels)
-
+    ce = criterion(logits, labels)
     uncertainty_penalty = torch.mean(
-        0.5 * torch.exp(-std) * (logits - labels) ** 2 + 0.5 * std
+        0.5
+        * torch.exp(-std)
+        * torch.sum(
+            (F.one_hot(labels, num_classes=4) - F.softmax(logits, dim=1)) ** 2, dim=1
+        )
+        + 0.5 * std
     )
-
-    return bce + uncertainty_penalty
+    return ce + uncertainty_penalty
 
 
 # Training loop
@@ -68,25 +71,22 @@ def train_one_epoch(model, loader, optimizer, device):
     running_loss = 0.0
     correct = 0
     total = 0
-
     for inputs, labels in loader:
-        inputs, labels = inputs.to(device), labels.to(device).float()
-
+        inputs, labels = (
+            inputs.to(device),
+            labels.to(device).long(),
+        )  # Ensure labels are long
         optimizer.zero_grad()
-
         # Model outputs both logits (predictions) and standard deviation (uncertainty)
         logits, std = model(inputs)
-
-        # Calculate the combined loss: BCE + uncertainty loss
+        # Calculate the combined loss: CE + uncertainty loss
         loss = bayesian_uncertainty_loss(logits, labels, std, device)
         loss.backward()
         optimizer.step()
-
         running_loss += loss.item()
         total += labels.size(0)
         _, predicted = logits.max(1)
-        correct += (predicted == labels.unsqueeze(1)).sum().item()
-
+        correct += (predicted == labels).sum().item()
     epoch_loss = running_loss / len(loader)
     epoch_acc = 100.0 * correct / total
     return epoch_loss, epoch_acc
@@ -97,20 +97,18 @@ def evaluate(model, loader, device):
     running_loss = 0.0
     correct = 0
     total = 0
-
     with torch.no_grad():
         for inputs, labels in loader:
-            inputs, labels = inputs.to(device), labels.to(device).float()
-
+            inputs, labels = (
+                inputs.to(device),
+                labels.to(device).long(),
+            )  # Ensure labels are long
             logits, std = model(inputs)
-
-            loss = bayesian_uncertainty_loss(logits, labels.unsqueeze(1), std, device)
-
+            loss = bayesian_uncertainty_loss(logits, labels, std, device)
             running_loss += loss.item()
-            predicted = (torch.sigmoid(logits) > 0.5).float()
+            _, predicted = logits.max(1)
             total += labels.size(0)
-            correct += (predicted == labels.unsqueeze(1)).sum().item()
-
+            correct += (predicted == labels).sum().item()
     epoch_loss = running_loss / len(loader)
     epoch_acc = 100.0 * correct / total
     return epoch_loss, epoch_acc
@@ -119,7 +117,6 @@ def evaluate(model, loader, device):
 for epoch in tqdm(range(NUM_EPOCHS)):
     train_loss, train_acc = train_one_epoch(model, train_loader, optimizer, DEVICE)
     test_loss, test_acc = evaluate(model, test_loader, DEVICE)
-
     print(f"Epoch {epoch+1}/{NUM_EPOCHS}")
     print(f"Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}%")
     print(f"Test Loss: {test_loss:.4f}, Test Acc: {test_acc:.2f}%")
@@ -127,5 +124,4 @@ for epoch in tqdm(range(NUM_EPOCHS)):
 
 print("Training complete!")
 
-# Save the trained model weights
 torch.save(model.state_dict(), "mymodel.pth")
