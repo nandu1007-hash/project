@@ -91,9 +91,6 @@ def train_one_epoch(model, loader, optimizer, device):
     correct = 0
     total = 0
     for batch_idx, (inputs, labels) in enumerate(loader):
-        print(
-            f"Batch {batch_idx}: Input shape: {inputs.shape}, Labels shape: {labels.shape}"
-        )
         inputs, labels = inputs.to(device), labels.to(device)
         optimizer.zero_grad()
         # Model outputs both logits (predictions) and standard deviation (uncertainty)
