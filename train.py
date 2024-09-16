@@ -102,7 +102,7 @@ def train_one_epoch(model, loader, optimizer, device):
         running_loss += loss.item()
         total += labels.size(0)
         if batch_idx % 100 == 0:
-            print(f"Batch {batch_idx}, Loss: {loss.item()}")
+            print(f"Batch {batch_idx}, Loss: {loss.item()}\n")
         _, predicted = logits.view(labels.size(0), -1).max(1)
         correct += (predicted == labels.view(-1)).sum().item()
 
