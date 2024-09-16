@@ -59,18 +59,16 @@ def bayesian_uncertainty_loss(logits, labels, std, device):
     print(f"Labels unique values: {torch.unique(labels)}")
     print(f"Std shape: {std.shape}")
 
+    # Reshape logits and std to (batch_size, num_classes)
+    batch_size, num_classes, height, width = logits.shape
+    logits = logits.view(batch_size, num_classes, -1).mean(dim=2)
+    std = std.view(batch_size, num_classes, -1).mean(dim=2)
+
+    print(f"Reshaped logits shape: {logits.shape}")
+    print(f"Reshaped std shape: {std.shape}")
+
     # Ensure labels are the correct shape and type
-    if labels.numel() == 0:
-        print("Warning: Empty labels tensor")
-        return torch.tensor(0.0, device=device)  # Return a dummy loss
-
     labels = labels.view(-1).long()
-
-    if logits.shape[0] != labels.shape[0]:
-        print(
-            f"Mismatch: logits batch size {logits.shape[0]}, labels batch size {labels.shape[0]}"
-        )
-        return torch.tensor(0.0, device=device)  # Return a dummy loss
 
     ce = criterion(logits, labels)
     uncertainty_penalty = torch.mean(
@@ -81,7 +79,7 @@ def bayesian_uncertainty_loss(logits, labels, std, device):
             ** 2,
             dim=1,
         )
-        + 0.5 * std
+        + 0.5 * std.mean(dim=1)
     )
     return ce + uncertainty_penalty
 
@@ -96,27 +94,18 @@ def train_one_epoch(model, loader, optimizer, device):
         print(
             f"Batch {batch_idx}: Input shape: {inputs.shape}, Labels shape: {labels.shape}"
         )
-        if labels.numel() == 0:
-            print(f"Skipping batch {batch_idx} due to empty labels")
-            continue
-
         inputs, labels = inputs.to(device), labels.to(device)
         optimizer.zero_grad()
         # Model outputs both logits (predictions) and standard deviation (uncertainty)
         logits, std = model(inputs)
         # Calculate the combined loss: CE + uncertainty loss
         loss = bayesian_uncertainty_loss(logits, labels, std, device)
-        if isinstance(loss, torch.Tensor) and loss.requires_grad:
-            loss.backward()
-            optimizer.step()
-            running_loss += loss.item()
+        loss.backward()
+        optimizer.step()
+        running_loss += loss.item()
         total += labels.size(0)
-        _, predicted = logits.max(1)
+        _, predicted = logits.view(labels.size(0), -1).max(1)
         correct += (predicted == labels.view(-1)).sum().item()
-
-    if total == 0:
-        print("Warning: No valid batches processed")
-        return 0.0, 0.0
 
     epoch_loss = running_loss / len(loader)
     epoch_acc = 100.0 * correct / total
@@ -130,20 +119,13 @@ def evaluate(model, loader, device):
     total = 0
     with torch.no_grad():
         for inputs, labels in loader:
-            if labels.numel() == 0:
-                continue
             inputs, labels = inputs.to(device), labels.to(device)
             logits, std = model(inputs)
             loss = bayesian_uncertainty_loss(logits, labels, std, device)
-            if isinstance(loss, torch.Tensor):
-                running_loss += loss.item()
-            _, predicted = logits.max(1)
+            running_loss += loss.item()
+            _, predicted = logits.view(labels.size(0), -1).max(1)
             total += labels.size(0)
             correct += (predicted == labels.view(-1)).sum().item()
-
-    if total == 0:
-        print("Warning: No valid batches processed during evaluation")
-        return 0.0, 0.0
 
     epoch_loss = running_loss / len(loader)
     epoch_acc = 100.0 * correct / total
@@ -160,5 +142,4 @@ for epoch in tqdm(range(NUM_EPOCHS)):
 
 print("Training complete!")
 
-# Save the trained model weights
 torch.save(model.state_dict(), "mymodel.pth")
