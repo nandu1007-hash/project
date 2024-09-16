@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 import torchvision.transforms as transforms
 from dataloader import CustomImageDataset
@@ -53,12 +54,24 @@ optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
 # Uncertainty-based loss
 def bayesian_uncertainty_loss(logits, labels, std, device):
+    # Debug print statements
+    print(f"Logits shape: {logits.shape}")
+    print(f"Labels shape: {labels.shape}")
+    print(f"Labels unique values: {torch.unique(labels)}")
+
+    # Ensure labels are the correct shape and type
+    if labels.dim() == 1:
+        labels = labels.unsqueeze(1)
+    labels = labels.squeeze().long()
+
     ce = criterion(logits, labels)
     uncertainty_penalty = torch.mean(
         0.5
         * torch.exp(-std)
         * torch.sum(
-            (F.one_hot(labels, num_classes=4) - F.softmax(logits, dim=1)) ** 2, dim=1
+            (F.one_hot(labels, num_classes=logits.size(1)) - F.softmax(logits, dim=1))
+            ** 2,
+            dim=1,
         )
         + 0.5 * std
     )
@@ -72,10 +85,7 @@ def train_one_epoch(model, loader, optimizer, device):
     correct = 0
     total = 0
     for inputs, labels in loader:
-        inputs, labels = (
-            inputs.to(device),
-            labels.to(device).long(),
-        )  # Ensure labels are long
+        inputs, labels = inputs.to(device), labels.to(device)
         optimizer.zero_grad()
         # Model outputs both logits (predictions) and standard deviation (uncertainty)
         logits, std = model(inputs)
@@ -86,7 +96,7 @@ def train_one_epoch(model, loader, optimizer, device):
         running_loss += loss.item()
         total += labels.size(0)
         _, predicted = logits.max(1)
-        correct += (predicted == labels).sum().item()
+        correct += (predicted == labels.squeeze()).sum().item()
     epoch_loss = running_loss / len(loader)
     epoch_acc = 100.0 * correct / total
     return epoch_loss, epoch_acc
@@ -99,16 +109,13 @@ def evaluate(model, loader, device):
     total = 0
     with torch.no_grad():
         for inputs, labels in loader:
-            inputs, labels = (
-                inputs.to(device),
-                labels.to(device).long(),
-            )  # Ensure labels are long
+            inputs, labels = inputs.to(device), labels.to(device)
             logits, std = model(inputs)
             loss = bayesian_uncertainty_loss(logits, labels, std, device)
             running_loss += loss.item()
             _, predicted = logits.max(1)
             total += labels.size(0)
-            correct += (predicted == labels).sum().item()
+            correct += (predicted == labels.squeeze()).sum().item()
     epoch_loss = running_loss / len(loader)
     epoch_acc = 100.0 * correct / total
     return epoch_loss, epoch_acc
@@ -124,4 +131,5 @@ for epoch in tqdm(range(NUM_EPOCHS)):
 
 print("Training complete!")
 
+# Save the trained model weights
 torch.save(model.state_dict(), "mymodel.pth")
