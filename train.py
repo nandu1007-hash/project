@@ -54,18 +54,18 @@ optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
 # Uncertainty-based loss
 def bayesian_uncertainty_loss(logits, labels, std, device):
-    print(f"Logits shape: {logits.shape}")
-    print(f"Labels shape: {labels.shape}")
-    print(f"Labels unique values: {torch.unique(labels)}")
-    print(f"Std shape: {std.shape}")
+    # print(f"Logits shape: {logits.shape}")
+    # print(f"Labels shape: {labels.shape}")
+    ## print(f"Labels unique values: {torch.unique(labels)}")
+    # print(f"Std shape: {std.shape}")
 
     # Reshape logits and std to (batch_size, num_classes)
     batch_size, num_classes, height, width = logits.shape
     logits = logits.view(batch_size, num_classes, -1).mean(dim=2)
     std = std.view(batch_size, num_classes, -1).mean(dim=2)
 
-    print(f"Reshaped logits shape: {logits.shape}")
-    print(f"Reshaped std shape: {std.shape}")
+    # print(f"Reshaped logits shape: {logits.shape}")
+    # print(f"Reshaped std shape: {std.shape}")
 
     # Ensure labels are the correct shape and type
     labels = labels.view(-1).long()
@@ -104,6 +104,8 @@ def train_one_epoch(model, loader, optimizer, device):
         optimizer.step()
         running_loss += loss.item()
         total += labels.size(0)
+        if batch_idx % 100 == 0:
+            print(f"Batch {batch_idx}, Loss: {loss.item()}")
         _, predicted = logits.view(labels.size(0), -1).max(1)
         correct += (predicted == labels.view(-1)).sum().item()
 
