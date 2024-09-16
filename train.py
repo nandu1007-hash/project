@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 BATCH_SIZE = 1
 LEARNING_RATE = 0.0001
-NUM_EPOCHS = 50
+NUM_EPOCHS = 10
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 transform = transforms.Compose(
