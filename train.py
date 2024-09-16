@@ -7,8 +7,8 @@ from model import Mymodel  # Import your model from the appropriate file
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-BATCH_SIZE = 32
-LEARNING_RATE = 0.001
+BATCH_SIZE = 16
+LEARNING_RATE = 0.0001
 NUM_EPOCHS = 50
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
