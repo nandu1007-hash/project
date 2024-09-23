@@ -34,7 +34,6 @@ def infer(image_path):
     # Perform inference
     with torch.no_grad():
         logits, std = model(image)
-        print(f"logits shape: {logits.shape}")  # Debugging statement
         # Average the logits across the spatial dimensions
         logits = logits.mean(dim=[2, 3])
         probabilities = torch.softmax(logits, dim=1)
