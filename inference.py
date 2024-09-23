@@ -4,6 +4,7 @@ from PIL import Image
 from model import Mymodel  # Import your model from the appropriate file
 import os
 import argparse
+from tqdm import tqdm
 
 # Define the transformation for the input image
 transform = transforms.Compose(
@@ -41,18 +42,19 @@ def infer(image_path):
 
     return predicted_class, probabilities.cpu().numpy()
 
-# Function to calculate accuracy
+# Function to calculate accuracy with progress bar
 def calculate_accuracy(folder_path, correct_class):
     total_images = 0
     correct_predictions = 0
 
-    for filename in os.listdir(folder_path):
-        if filename.endswith((".jpg", ".jpeg", ".png")):
-            image_path = os.path.join(folder_path, filename)
-            predicted_class, _ = infer(image_path)
-            if predicted_class == correct_class:
-                correct_predictions += 1
-            total_images += 1
+    image_files = [f for f in os.listdir(folder_path) if f.endswith((".jpg", ".jpeg", ".png"))]
+
+    for filename in tqdm(image_files, desc="Processing images"):
+        image_path = os.path.join(folder_path, filename)
+        predicted_class, _ = infer(image_path)
+        if predicted_class == correct_class:
+            correct_predictions += 1
+        total_images += 1
 
     accuracy = (correct_predictions / total_images) * 100 if total_images > 0 else 0
     return accuracy
