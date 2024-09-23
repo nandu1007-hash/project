@@ -34,6 +34,7 @@ def infer(image_path):
     # Perform inference
     with torch.no_grad():
         logits, std = model(image)
+        print(f"logits shape: {logits.shape}")  # Debugging statement
         probabilities = torch.softmax(logits, dim=1)
         predicted_class = torch.argmax(probabilities, dim=1).item()
 
