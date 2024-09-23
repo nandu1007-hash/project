@@ -47,12 +47,10 @@ def infer(image_path):
             predicted_class = torch.argmax(probabilities, dim=1).item()
 
             # Save the logits or probabilities to a file
-            output_file = os.path.join(output_dir, os.path.basename(image_path) + ".jpg")
-            output_image = transforms.ToPILImage()(probabilities.squeeze().cpu())
-            output_image.save(output_file)
+            output_file = os.path.join(output_dir, os.path.basename(image_path) + ".npy")
+            np.save(output_file, probabilities.cpu().numpy())
 
         except (RuntimeError, AssertionError) as e:
-            print(f"Skipping image {image_path} due to error: {e}")
             return None, None
 
     return predicted_class, probabilities.cpu().numpy()
@@ -75,7 +73,6 @@ def calculate_accuracy(folder_path, correct_class):
     accuracy = (correct_predictions / total_images) * 100 if total_images > 0 else 0
     return accuracy
 
-# Main function to parse arguments and run the script
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Inference script for image classification")
     parser.add_argument("folder_path", type=str, help="Path to the folder containing images")
