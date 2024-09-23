@@ -23,7 +23,7 @@ args = Args()
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = Mymodel(args=args,classes=4).to(DEVICE)
-model.load_state_dict(torch.load("mymodel.pth"))
+model.load_state_dict(torch.load("/kaggle/input/nandumodel/mymodel.pth"))
 model.eval()
 
 # Function to perform inference
