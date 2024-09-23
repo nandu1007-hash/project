@@ -23,7 +23,7 @@ args = Args()
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = Mymodel(args=args, classes=4).to(DEVICE)
-model.load_state_dict(torch.load("/kaggle/input/nandumodel/mymodel.pth", weights_only=True))
+model.load_state_dict(torch.load("/kaggle/input/nandumodel/mymodel.pth", map_location=DEVICE))
 model.eval()
 
 # Function to perform inference
@@ -35,6 +35,7 @@ def infer(image_path):
     # Perform inference
     with torch.no_grad():
         logits, std = model(image)
+        print(f"logits shape: {logits.shape}")  # Debugging statement
         # Average the logits across the spatial dimensions
         logits = logits.mean(dim=[2, 3])
         probabilities = torch.softmax(logits, dim=1)
