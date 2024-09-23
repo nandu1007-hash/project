@@ -18,12 +18,11 @@ class Args:
     def __init__(self):
         self.distribution = "beta"  # Example argument, adjust as needed
 
-
 args = Args()
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = Mymodel(args=args,classes=4).to(DEVICE)
-model.load_state_dict(torch.load("/kaggle/input/nandumodel/mymodel.pth"))
+model = Mymodel(args=args, classes=4).to(DEVICE)
+model.load_state_dict(torch.load("/kaggle/input/nandumodel/mymodel.pth", weights_only=True))
 model.eval()
 
 # Function to perform inference
