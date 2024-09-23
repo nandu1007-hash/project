@@ -34,12 +34,14 @@ def infer(image_path):
 
     # Perform inference
     with torch.no_grad():
-        logits, std = model(image)
-        print(f"logits shape: {logits.shape}")  # Debugging statement
-        # Average the logits across the spatial dimensions
-        logits = logits.mean(dim=[2, 3])
-        probabilities = torch.softmax(logits, dim=1)
-        predicted_class = torch.argmax(probabilities, dim=1).item()
+        try:
+            logits, std = model(image)
+            # Average the logits across the spatial dimensions
+            logits = logits.mean(dim=[2, 3])
+            probabilities = torch.softmax(logits, dim=1)
+            predicted_class = torch.argmax(probabilities, dim=1).item()
+        except RuntimeError as e:
+            return None, None
 
     return predicted_class, probabilities.cpu().numpy()
 
@@ -53,9 +55,10 @@ def calculate_accuracy(folder_path, correct_class):
     for filename in tqdm(image_files, desc="Processing images"):
         image_path = os.path.join(folder_path, filename)
         predicted_class, _ = infer(image_path)
-        if predicted_class == correct_class:
-            correct_predictions += 1
-        total_images += 1
+        if predicted_class is not None:
+            if predicted_class == correct_class:
+                correct_predictions += 1
+            total_images += 1
 
     accuracy = (correct_predictions / total_images) * 100 if total_images > 0 else 0
     return accuracy
