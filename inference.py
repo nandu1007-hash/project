@@ -14,9 +14,15 @@ transform = transforms.Compose(
     ]
 )
 
-# Load the trained model
+class Args:
+    def __init__(self):
+        self.distribution = "beta"  # Example argument, adjust as needed
+
+
+args = Args()
+
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = Mymodel().to(DEVICE)
+model = Mymodel(args=args,classes=4).to(DEVICE)
 model.load_state_dict(torch.load("mymodel.pth"))
 model.eval()
 
