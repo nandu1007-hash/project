@@ -56,6 +56,7 @@ def calculate_accuracy(folder_path, correct_class):
     for filename in tqdm(image_files, desc="Processing images"):
         image_path = os.path.join(folder_path, filename)
         predicted_class, _ = infer(image_path)
+        print(predicted_class)
         if predicted_class is not None:
             if predicted_class == correct_class:
                 correct_predictions += 1
