@@ -36,13 +36,12 @@ def infer(image_path):
     with torch.no_grad():
         try:
             logits, std = model(image)
-            print(f"logits shape: {logits.shape}")  # Debugging statement
+            # print(f"logits shape: {logits.shape}")  # Debugging statement
             # Average the logits across the spatial dimensions
             logits = logits.mean(dim=[2, 3])
             probabilities = torch.softmax(logits, dim=1)
             predicted_class = torch.argmax(probabilities, dim=1).item()
         except (RuntimeError, AssertionError) as e:
-            print(f"Skipping image {image_path} due to error: {e}")
             return None, None
 
     return predicted_class, probabilities.cpu().numpy()
